@@ -1,92 +1,82 @@
-const apiKey = `da817217`
+const apiKey = `da817217`;
+const searchBtn = document.querySelector('.search');
+const inp = document.querySelector('input');
+const list = document.querySelector(".list");
+const movieDiv = document.querySelector(".movie");
+const modalDiv = document.querySelector('.modal');
+const modalList = document.querySelector('.modalList');
 
-const searchBtns = document.querySelector('.search')
-
-const inp = document.querySelector('input')
-
-const cardDiv = document.querySelector('.card')
-
-const list = document.querySelector(".list")
-
-const movieDiv = document.querySelector(".movie")
-
-const modalDiv = document.querySelector('.modal')
-
-const modalList = document.querySelector('.modalList')
-
-async function movie() {
-    try{
-        const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${inp.value}`)
-        const data = await response.json()  
-   
-        nuru(data.Search)
-    }catch(err){
+async function fetchMovies() {
+    try {
+        const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${inp.value}`);
+        const data = await response.json();
+        if (data.Search) {
+            displayMovies(data.Search);
+        } else {
+            list.innerHTML = "<p>No results found</p>";
+        }
+    } catch (err) {
         console.log(err);
-     list.innerHTML = ""
+        list.innerHTML = "<p>An error occurred</p>";
     }
-   
 }
 
+async function fetchFilmDetails(id) {
+    try {
+        const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+        const data = await response.json();
+        displayModal(data);
+    } catch (error) {
+        console.log(error);
+        modalList.innerHTML = "<p>An error occurred</p>";
+    }
+}
 
-// const fetchFilmDetails = async (id) => {
-    
-
-//     try {
-//         const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`)
-
-//         const data  = await response.json();
-
-//         console.log(data);
-//         modal(data)
-//     } catch (error) {
-       
-//     }
-// }
-
-// function modal(data) {
-//     const listMap = data.map(x => `
-//     <div class="listItem">
-//     <div class='title'>
-//     <h3>${simbolTitle}</h3>
-//     </div>
-//     <div class='poster'>
-//     <img src="${x.Poster}" alt="${x.imdbID}" class='liImg'>
-//     </div>
-//     </div>
-//     `)
-
-// }
-
-function nuru(data) {
+function displayMovies(data) {
     const listMap = data.map(x => {
-        const simbolTitle = x.Title.length > 20 ? x.Title.substring(0, 20) + '...' : x.Title; 
-        return `<div class="listItem">
-                    <div class='title'>
-                    <h3>${simbolTitle}</h3>
-                    </div>
-                    <div class='poster'>
+        const symbolTitle = x.Title.length > 20 ? x.Title.substring(0, 20) + '...' : x.Title;
+        return `
+            <div class="listItem">
+                <div class='title'>
+                    <h3>${symbolTitle}</h3>
+                </div>
+                <div class='poster'>
                     <img src="${x.Poster}" alt="${x.imdbID}" class='liImg'>
-                    </div>
-                </div>`;
+                </div>
+            </div>`;
     });
-
     list.innerHTML = listMap.join("");
 }
 
+function displayModal(data) {
+    modalList.innerHTML = `
+        <div class="modalItem">
+            <h2>${data.Title}</h2>
+            <img src="${data.Poster}" alt="${data.Title}">
+            <p>Year: ${data.Year}</p>
+            <p>Director: ${data.Director}</p>
+            <p>Plot: ${data.Plot}</p>
+        </div>
+    `;
+    modalDiv.style.display = 'block';
+}
 
-searchBtns.addEventListener('click', function () {
-  movie()
-})
+searchBtn.addEventListener('click', fetchMovies);
 
-inp.addEventListener("keyup", () => {
-    movie()
-})
-
+inp.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+        fetchMovies();
+    }
+});
 
 movieDiv.addEventListener("click", (e) => {
-   if(e.target.alt){
-    fetchFilmDetails(e.target.alt)
-}
-modalDiv.style.display = 'inline-block'
+    if (e.target.alt && e.target.classList.contains('liImg')) {
+        fetchFilmDetails(e.target.alt);
+    }
+});
 
-})
+modalDiv.addEventListener("click", (e) => {
+    if (e.target === modalDiv) {
+        modalDiv.style.display = 'none';
+    }
+});
